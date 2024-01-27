@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-exchange
+  template:
+    metadata:
+      labels:
+        app: data-exchange
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        command: ["sh", "-c", "while true; do echo 'Data from busybox' >> /shared-data/data.txt; sleep 5; done"]
+        resources:
+          limits:
+            cpu: 200m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 500Mi
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared-data
+      - name: multitool
+        image: praqma/network-multitool
+        command: ["sh", "-c", "tail -f /shared-data/data.txt"]
+        resources:
+          limits:
+            cpu: 200m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 500Mi
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared-data
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+
